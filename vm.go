@@ -5,6 +5,9 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
+	"strings"
+	"time"
 )
 
 type Display interface {
@@ -435,8 +438,172 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 		// it wraps around to the opposite side of the vm.screen
 
 	case 0xE000:
+		switch vm.opcode & 0x00FF {
+		case 0x009E:
+			// Ex9E - SKP vm.Vx
+			// Skip next instruction if key with the value of vm.Vx is pressed
+			if keyboard.isKeyPressed(vm.V[0x0F00&vm.opcode>>8]) {
+				vm.pc += 4
+			} else {
+				vm.pc += 2
+			}
+
+		case 0x00A1:
+			//ExA1 - SKNP vm.Vx
+			// Skip next instruction if key with the value of vm.Vx is not pressed
+			if !keyboard.isKeyPressed(v, m.V[0x0F00&vm.opcode>>8]) {
+				vm.pc += 4
+			} else {
+				vm.pc += 2
+			}
+		default:
+			fmt.Printf("Bad vm.opcode: % x\n", vm.opcode)
+		}
 
 	case 0xF000:
+		switch vm.opcode & 0x00FF {
+		case 0x0007:
+			// Fx07 - LD vm.Vx, DT
+			// Set vm.Vx = delay timer value.
+			vm.V[0x0F00&vm.opcode>>8] = vm.delayTimer
+			vm.pc += 2
+
+		case 0x000A:
+			// Fx0A - LD vm.Vx, K
+			// Wait for a key press, store the value of the key in vm.Vx.
+			vm.V[0x0F00&vm.opcode>>8], running = keyboard.waitForKeyPress()
+			if !running {
+				return false
+			}
+			vm.pc += 2
+
+		case 0x0015:
+			// Fx15 - LD DT, vm.Vx
+			// Set delay timer = vm.Vx.
+			vm.delayTimer = vm.V[0x0F00&vm.opcode>>8]
+			vm.pc += 2
+
+		case 0x0018:
+			// Fx18 - LD ST, vm.Vx
+			// Set sound timer = vm.Vx.
+			vm.soundTimer = vm.V[0x0F00&vm.opcode>>8]
+			vm.pc += 2
+
+		case 0x001E:
+			// Fx1E - ADD vm.I, vm.Vx
+			// Set vm.I = vm.I + vm.Vx.
+			vm.I += uint16(vm.V[0x0F00&vm.opcode>>8])
+			vm.pc += 2
+
+		case 0x0029:
+			// Fx29 - LD F, vm.Vx
+			// Set vm.I = location of sprite for digit vm.Vx.
+			// The value of vm.I is set to the location for the hexadecimal sprite corresponding to the value of vm.Vx.
+
+			vm.I = 0x050 + 5*uint16(vm.V[0x0F00&vm.opcode>>8])
+			vm.pc += 2
+
+		case 0x0033:
+			// Fx33 - LD B, vm.Vx
+			// Store BCD representation of vm.Vx in vm.memory locations vm.I, vm.I+1, and vm.I+2.
+			// The interpreter takes the decimal value of vm.Vx,
+			// and places the hundreds digit in vm.memory at location in vm.I,
+			// the tens digit at location vm.I+1,
+			// and the ones digit at location vm.I+2.
+			vm.memory[vm.I] = vm.V[0x0F00&vm.opcode>>8] / 100
+			vm.memory[vm.I+1] = (vm.V[0x0F00&vm.opcode>>8] - vm.memory[vm.I]*100) / 10
+			vm.memory[vm.I+2] = vm.V[0x0F00&vm.opcode>>8] - vm.memory[vm.I]*100 - vm.memory[vm.I+1]*10
+
+			vm.pc += 2
+
+		case 0x0055:
+			// Fx55 - LD [vm.I], vm.Vx
+			// Store registers vm.V0 through vm.Vx in vm.memory starting at location vm.I.
+			var i uint16
+			for i = 0; i <= 0x0F00&vm.opcode>>8; i++ {
+				vm.memory[vm.I+i] = vm.V[i]
+			}
+			vm.pc += 2
+
+		case 0x0065:
+			// Fx65 - LD vm.Vx, [vm.I]
+			// Read registers vm.V0 through vm.Vx from vm.memory starting at location vm.I.
+			var i uint16
+			for i = 0; i <= 0x0F00&vm.opcode>>8; i++ {
+				vm.V[i] = vm.memory[vm.I+i]
+			}
+			vm.pc += 2
+
+		default:
+			fmt.Printf("Bad vm.opcode: % x\n", vm.opcode)
+		}
+
+	default:
+		fmt.Printf("Bad vm.opcode: % x\n", vm.opcode)
 	}
 	return true
+}
+
+func (vm *VM) loop(display Display, keyboard Keyboard) {
+	var timecount uint8
+	var running = true
+	var andscreen [32][8]uint8 // bitmap
+
+	paused := false
+	bell := []byte{7}
+	screenarray := make([][32][8]uint8, vm.screenBuffer)
+
+	//main loop
+	for running {
+		time.Sleep(time.Duration(1e6/uint32(vm.clockSpeed)) * time.Microsecond)
+		running = vm.parseOpcode(keyboard)
+
+		// Do not run SDL in test
+		if !strings.HasSuffix(os.Args[0], ".test") {
+		input:
+			paused, running = keyboard.specialKeyPressed(paused)
+
+			if paused && running {
+				goto input
+			}
+
+			//display tick
+			if vm.drawflag {
+				display.clearDisplay()
+				for yp := 0; yp < 32; yp++ {
+					for xb := 0; xb < 8; xb++ {
+						for z := uint8(0); z < vm.screenBuffer; z++ {
+							andscreen[yp][xb] = screenarray[z][yp][xb] | vm.screen[yp][xb]
+						}
+						for xp := 0; xp < 8; xp++ {
+							if andscreen[yp][xb]&uint8(math.Pow(2, float64(7-xp)))>>uint8(7-xp) == 1 {
+								display.drawPixel(int32(8)*int32(xb)+int32(xp), int32(yp))
+							}
+						}
+					}
+				}
+				display.updateDisplay()
+				screenarray[0] = vm.screen
+				for z := vm.screenBuffer - 1; z > 0; z-- {
+					screenarray[z] = screenarray[z-1]
+				}
+			} //drawflag end
+
+		} // unit test ignore end
+
+		if timecount >= uint8(vm.clockSpeed/vm.timerSpeed) {
+			timecount = 0
+			if vm.delayTimer > 0 {
+				vm.delayTimer--
+			}
+			if vm.soundTimer > 0 {
+				os.Stdout.Write(bell) // TODO add continuous tone
+				vm.soundTimer--
+			}
+		}
+		timecount++
+		if vm.pc-0x200 >= vm.romlength {
+			running = false
+		}
+	}
 }
