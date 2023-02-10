@@ -176,14 +176,32 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 	switch vm.opcode & 0xF000 {
 	case 0x0000:
 		switch vm.opcode & 0x00FF{ 
-	case 0x00E0:
-		//clear screen 
-		//fmt.Printf("Clear vm.screen % x, % d\n, vm.opcode, vm.pc")
-		for yp := 0; yp < 32; yp++ {
-			for xb := 0; xb < 8; xb++ {
-				vm.screen[yp][xb] = 0
+		case 0x00E0:
+			//clear screen 
+			//fmt.Printf("Clear vm.screen % x, % d\n, vm.opcode, vm.pc")
+			for yp := 0; yp < 32; yp++ {
+				for xb := 0; xb < 8; xb++ {
+					vm.screen[yp][xb] = 0
 				}
 			}
+			vm.drawflag = true
+			vm.pc += 2
+		case 0x00EE:
+			// 00EE - RET
+			// Return from subroutine
+			if vm.sp <= 0 {
+				log.Fatal(fmt.Errorf("vm.stack pointer below 0"))
+			}
+			//fmt.Printf("RET pc: %x, new pc: %x\n", vm.pc, vm.stack[vm.sp]+2, vm.opcode)
+			vm.sp--
+			vm.pc = vm.stack[vm.sp] + 2 
+			// fmt.Printf("RET pc: %d/n", vm.pc)
+		default:
+			// fmt.Printf("SYS vm.opcode ignored: % x, % d\n," vm.opcode, vm.pc)
+			vm.pc += 2
 		}
+	case 0x1000:
+		// lnnn - JP addr
+		// Jump to location nnn.
 	}
 }
