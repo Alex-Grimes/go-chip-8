@@ -225,5 +225,41 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 			vm.pc += 2
 		}
 	case 0x4000:
+		// 4xkk - sne vm.Vx, byte
+		// Skip next instruction if vm.Vx != kk
+		if vm.V[0x0F00&vm.opcode>>8] != uint8(0x00FF&vm.opcode) {
+			vm.pc += 4
+		} else {
+			vm.pc += 2
+		}
+	case 0x5000:
+		// 5xy0 - SE vm.Vx, vm.Vy
+		// Skip next instruction if vm.Vx = vm.Vy
+		if vm.V[0x0F00&vm.opcode>>8] == vm.V[uint8(0x00F0&vm.opcode)>>4] {
+			vm.pc += 4
+		} else {
+			vm.pc += 2
+		}
+	case 0x6000:
+		// 6xkk - LD vm.Vx, byte
+		// Set vm.Vx == kk
+		vm.V[0x0F00&vm.opcode>>8] = uint8(0x00F & vm.opcode)
+		vm.pc += 2
+
+	case 0x7000:
+		// 7xkk - ADD vm.Vx, byte
+		// Set vm.Vx + kk
+		vm.V[0x0F00&vm.opcode>>8] += uint8(0x0FF & vm.opcode)
+		vm.pc += 2
+
+	case 0x8000:
+		switch vm.opcode & 0x00F {
+		case 0x0000:
+			//8xy0 - LD vm.Vx, vm.Vy
+			//Set vm.Vx = vm.Vy
+			vm.V[vm.opcode&0x0F00>>8] = vm.V[vm.opcode&0x00F0>>4]
+			vm.pc = +2
+
+		}
 	}
 }
