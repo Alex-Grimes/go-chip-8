@@ -13,40 +13,34 @@ Installation
 To install and run the Chip 8 emulator, you will need to have Go installed on your computer.
 
 Clone the repository to your local machine:
-
-bash
-
+``` bash
 git clone https://github.com/alex-grimes/go-chip-8.git
-
+```
 Change into the project directory:
 
-go
-
+```go
 cd chip8-emulator-go
-
+```
 Build the emulator:
 
-go
-
+```go
 go build
-
+```
 Run the emulator:
 
-go
-
+```go
 ./go-chip-8 [path to Chip 8 program]
-
+```
 Usage
 
 The Chip 8 emulator supports the original Chip 8 hexadecimal keyboard for input. The key mapping is as follows:
 
-css
-
+```css
 1 2 3 4
 q w e r
 a s d f
 z x c v
-
+```
 You can toggle the display of the original Chip 8 screen resolution by pressing the F1 key.
 Contributing
 
