@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 )
 
 type Display interface {
@@ -332,5 +334,109 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 	case 0x9000:
 		// 9xy0 - SNE vm.Vx, vm.Vy
 		// skip next instruction if vm.Vx != vm.Vy
+		if vm.V[0x0F00&vm.opcode>>8] != vm.V[0x00F0&vm.opcode>>4] {
+			vm.pc += 4
+		} else {
+			vm.pc += 2
+		}
+
+	case 0xA000:
+		//Annn - LD vm.I, addr
+		// Set vm.I = nnn
+		vm.I = vm.opcode & 0x0FFF
+		vm.pc += 2
+		// fmt.Printf("% x\n", vm.I)
+
+	case 0xB000:
+		// Bnnn - JP vm.V0, addr
+		// Jump to location nnn _ vm.V0
+		vm.pc = 0x0FFF&vm.opcode + uint16(vm.V[0])
+
+	case 0xC000:
+		// Cxkk - RND vm.Vx, byte
+		// Set vm.Vx = random byte AND kk
+		vm.V[0x0F00&vm.opcode>>8] = uint8(rand.Intn(256)) & uint8(0x00FF&vm.opcode)
+		vm.pc += 2
+
+	case 0xD000:
+		// dxyn - DRW vm.Vx, vm.Vy, nibble
+		// Display n-byte sprite starting at vm.memore location vm.I at (vm.Vx, vm.Vy), set vm.VF = collision
+		// fmt.Printf("Draw sprite + collide: % x, %d\n", vm.opcode, vm.pc)
+		vm.drawflag = true
+		n := 0x000F & vm.opcode
+		x := vm.V[0x0F00&vm.opcode>>8]
+		y := vm.V[0x00F0&vm.opcode>>4]
+		vm.V[0xF] = 0
+		if x > 63 {
+			switch vm.wrapX {
+			case "on":
+				x = 0 + x%64
+			case "off":
+				vm.drawflag = false
+			case "error":
+				log.Fatal(fmt.Errorf("illegal Draw instruction X - PC: 0x%x, opcode: 0x%x", vm.pc, vm.opcode))
+			}
+		}
+		if y > 31 {
+			switch vm.wrapY {
+			case "on":
+				y = 0 + y%32
+			case "off":
+				vm.drawflag = false
+			case "error":
+				log.Fatal(fmt.Errorf("illegal DRAW instruction Y - PC: 0x%x, opcode: 0x%x", vm.pc, vm.opcode))
+			}
+		}
+		vm.pc += 2
+		if vm.drawflag {
+			for i := uint16(0); i < n; i++ {
+				sprite := vm.memory[vm.I+i]
+				if x%8 == 0 {
+					if vm.screen[y][x/8]&sprite > 0 {
+						vm.V[0xF] = 1
+					}
+					vm.screen[y][x/8] = sprite ^ vm.screen[y][x/8]
+				} else {
+					// first part
+					s := sprite >> (x % 8)
+					if vm.screen[y][x/8]&s > 0 {
+						vm.V[0xF] = 1
+					}
+					vm.screen[y][x/8] = s ^ vm.screen[y][x/8]
+					// second part - handle wrap
+
+					s = sprite & uint8(math.Pow(2, float64(x%8))-1) << (8 - x%8)
+					newx := x/8 + 1
+					if newx > 7 {
+						newx = 0
+					}
+					if vm.wrapX == "on" || newx > 0 {
+						if vm.screen[y][newx]&s > 0 {
+							vm.V[0xF] = 1
+						}
+						vm.screen[y][newx] = s ^ vm.screen[y][newx]
+					}
+				}
+				y++
+				if y > 31 {
+					if vm.wrapY == "on" {
+						y = 0
+					} else {
+						break
+					}
+				}
+			}
+		}
+		// The interpreter reads n bytes from vm.memory, starting at the address stored in vm.I
+		// These bytes are then displayed as sprites on vm.screen at coordinates (vm.Vx, vm.Vy)
+		// Sprites are XORed onto the existing vm.screen
+		// If this causes any pixels to be erased, vm.VF is set to 1, otherwise it is set to 0
+		// If the sprite is positioned so part of it is outside the coordinates of the display,
+		// it wraps around to the opposite side of the vm.screen
+
+	case 0xE000:
+
+	case 0xF000:
 	}
+	return true
 }
