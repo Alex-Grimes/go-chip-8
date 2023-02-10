@@ -1,4 +1,26 @@
+package main
 
+import (
+	"fmt"
+	"log"
+	"math"
+	"math/rand"
+	"os"
+	"strings"
+	"time"
+)
+
+type Display interface {
+	clearDisplay()
+	updateDisplay()
+	drawPixel(x int32, y int32)
+}
+
+type Keyboard interface {
+	waitForKeyPress() (uint8, bool)
+	isKeyPressed(key uint8) bool
+	specialKeyPressed(paused bool) (bool, bool)
+}
 type VM struct {
 	romlength              uint16
 	pc, I, opcode, sp      uint16
@@ -140,4 +162,28 @@ fun (vm *VM) init(rombytes []byte, wrapX string, wrapY string, clockSpeed int, t
 	vm.loadROM(rombytes)
 	vm.pc = 0x200
 	vm.drawflag = false
+	vm.wrapX = wrapX
+	vm. wrapY = wrapY
+	vm.clockSpeed = uint16(clockSpeed)
+	vm.timerSpeed = uint16(timerSpeed)
+	vm.screenBuffer = uint8(screenBuffer)
+}
+
+func (vm *VM) parseOpcode(keyboard Keyboard) bool {
+	var running bool
+	vm.opcode = uint16(vm.memory[vm.pc])<<8 | uint16(vm.memory[vm.pc+1])
+	vm.drawflag = false
+	switch vm.opcode & 0xF000 {
+	case 0x0000:
+		switch vm.opcode & 0x00FF{ 
+	case 0x00E0:
+		//clear screen 
+		//fmt.Printf("Clear vm.screen % x, % d\n, vm.opcode, vm.pc")
+		for yp := 0; yp < 32; yp++ {
+			for xb := 0; xb < 8; xb++ {
+				vm.screen[yp][xb] = 0
+				}
+			}
+		}
+	}
 }
