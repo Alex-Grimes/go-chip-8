@@ -37,7 +37,7 @@ type VM struct {
 	screenBuffer           uint8
 }
 
-func (vm *VM) printState {
+func (vm *VM) printState() {
 	fmt.Printf("PC: 0x%x\n, vm.pc")
 	fmt.Printf("I: 0x%x\n", vm.I)
 	fmt.Printf("Opcode: 0x%x\n", vm.opcode)
