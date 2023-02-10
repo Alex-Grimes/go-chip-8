@@ -260,6 +260,77 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 			vm.V[vm.opcode&0x0F00>>8] = vm.V[vm.opcode&0x00F0>>4]
 			vm.pc = +2
 
+		case 0x0001:
+			// 8xy1 - OR vm.Vx, vm.Vy
+			// Set vm.Vx = vm.Vx OR vm.Vy
+			vm.V[vm.opcode&0x0F00>>8] |= vm.V[vm.opcode&0x00F0>>4]
+			vm.pc += 2
+		case 0x0002:
+			// 8xy2 - AND vm.Vx, vm.Vy
+			// Set vm.Vx = vm.Vx AND vm.Vy
+			vm.V[vm.opcode&0x0F00>>8] &= vm.V[vm.opcode&0x00F0>>4]
+			vm.pc += 2
+		case 0x0003:
+			// 8xy3 - XOR vm.Vx, vm.Vy
+			// Set vm.Vx = vm.Vx XOR vm.Vy
+			vm.V[vm.opcode&0x0F00>>8] ^= vm.V[vm.opcode&0x00F0>>4]
+			vm.pc += 2
+		case 0x0004:
+			// 8xy4 - ADD vm.Vx, vm.Vy
+			// Set vm.Vx = vm.Vx + vm.Vy, set vm.VF = carry
+			tempvar := uint16(vm.V[vm.opcode&0x0F00>>8]) + uint16(vm.V[vm.opcode&0x00F0>>4])
+			vm.V[vm.opcode&0x0F00>>8] = uint8(0x00FF & tempvar)
+			if 0xFF00&tempvar != 0 {
+				vm.V[0xF] = 1
+			} else {
+				vm.V[0xF] = 0
+			}
+			vm.pc += 2
+		case 0x0005:
+			// 8xy5 - SUB vm.Vx, vm.Vy
+			// Set vm.Vx = vm.Vx - vm.Vy, set vm.VF = NOT borrow
+			if vm.V[vm.opcode&0x0F00>>8] > vm.V[vm.opcode&0x00F0>>4] {
+				vm.V[0xF] = 1
+			} else {
+				vm.V[0xF] = 0
+			}
+			vm.pc += 2
+			vm.V[vm.opcode&0x0F00>>8] -= vm.V[vm.opcode&0x00F0>>4]
+		case 0x0006:
+			// 8xy6 - SHR vm.Vx {, vm.Vy}
+			// Set vm.Vx = vm.Vx SHR 1
+			if vm.V[vm.opcode&0x0F00>>8]&1 == 1 {
+				vm.V[0xF] = 1
+			} else {
+				vm.V[0xF] = 0
+			}
+			vm.V[vm.opcode&0x0F00>>8] >>= 1
+			vm.pc += 2
+		case 0x0007:
+			// 8xy7 - SUBN vm.Vx, vm.Vy
+			// Set vm.Vx = vm.Vy - vm.Vx, set vm.VF = NOT borrow
+			if vm.V[vm.opcode&0x00F0>>4] > vm.V[vm.opcode&0x0F00>>8] {
+				vm.V[0xF] = 1
+			} else {
+				vm.V[0xF] = 0
+			}
+			vm.pc += 2
+			vm.V[vm.opcode&0x0F00>>8] = vm.V[vm.opcode&0x00F0>>4] - vm.V[vm.opcode&0x0F00>>8]
+		case 0x000E:
+			// 8xyE - SHL vm.Vx {, vm.Vy}
+			// Set vm.Vx = vm.Vx SHL 1
+			if vm.V[vm.opcode&0x0F00>>8]&128 == 128 {
+				vm.V[0xF] = 1
+			} else {
+				vm.V[0xF] = 0
+			}
+			vm.V[vm.opcode&0x0F00>>8] <<= 1
+			vm.pc += 2
+		default:
+			fmt.Printf("Bad vm.opcode: % x\n", vm.opcode)
 		}
+	case 0x9000:
+		// 9xy0 - SNE vm.Vx, vm.Vy
+		// skip next instruction if vm.Vx != vm.Vy
 	}
 }
