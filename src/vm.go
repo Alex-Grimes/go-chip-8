@@ -263,7 +263,7 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 			//8xy0 - LD vm.Vx, vm.Vy
 			//Set vm.Vx = vm.Vy
 			vm.V[vm.opcode&0x0F00>>8] = vm.V[vm.opcode&0x00F0>>4]
-			vm.pc = +2
+			vm.pc += 2
 
 		case 0x0001:
 			// 8xy1 - OR vm.Vx, vm.Vy
