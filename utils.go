@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -32,7 +32,7 @@ func charToHex(c rune) byte {
 }
 
 // RomFromString : Convert string of form "00 00 00" to a list of bytes
-func RomFromString(s string) []byte {
+func ROMFromString(s string) []byte {
 	var out []byte
 	var curbyte byte
 	var tempbyte byte
@@ -68,7 +68,7 @@ func PrintROM(rom []byte) {
 }
 
 func readROM(filename string) []byte {
-	dat, err := ioutil.ReadFile(filename)
+	dat, err := os.ReadFile(filename)
 	check(err)
 	return dat
 }

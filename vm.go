@@ -38,7 +38,7 @@ type VM struct {
 }
 
 func (vm *VM) printState() {
-	fmt.Printf("PC: 0x%x\n, vm.pc")
+	fmt.Printf("PC: 0x%x\n", vm.pc)
 	fmt.Printf("I: 0x%x\n", vm.I)
 	fmt.Printf("Opcode: 0x%x\n", vm.opcode)
 	fmt.Println("Memory:")
@@ -451,7 +451,7 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 		case 0x00A1:
 			//ExA1 - SKNP vm.Vx
 			// Skip next instruction if key with the value of vm.Vx is not pressed
-			if !keyboard.isKeyPressed(v, m.V[0x0F00&vm.opcode>>8]) {
+			if !keyboard.isKeyPressed(vm.V[0x0F00&vm.opcode>>8]) {
 				vm.pc += 4
 			} else {
 				vm.pc += 2

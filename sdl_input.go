@@ -84,7 +84,7 @@ QUIT = Escape
 	keyboard.specialMap = specialMap
 }
 
-func (keyboard *SDLDisplay) waitForKeyPress() (uint8, bool) {
+func (keyboard *SDLKeyboard) waitForKeyPress() (uint8, bool) {
 	var val uint8
 	loop := true
 	quit := false
@@ -104,17 +104,23 @@ func (keyboard *SDLDisplay) waitForKeyPress() (uint8, bool) {
 	}
 	return val, quit
 }
+func (keyboard *SDLKeyboard) isKeyPressed(key uint8) bool {
+	arr := sdl.GetKeyboardState()
+	return arr[keyboard.scancodeReversed[key]] == 1
+}
 
 func (keyboard *SDLKeyboard) specialKeyPressed(paused bool) (bool, bool) {
 	running := true
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
+		case *sdl.QuitEvent:
+			running = false
 		case *sdl.KeyboardEvent:
 			if t.Type == 768 {
 				switch uint16(t.Keysym.Sym) {
 				case keyboard.specialMap["PAUSE"]:
 					paused = !paused
-				case keyboard.keycodeMap["QUIT"]:
+				case keyboard.specialMap["QUIT"]:
 					running = false
 				}
 			}
