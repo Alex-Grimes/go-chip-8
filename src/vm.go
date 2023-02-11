@@ -111,7 +111,7 @@ func (vm *VM) initialiseFont() {
 	vm.memory[0x07E] = 0x90
 	vm.memory[0x07F] = 0xF0
 	vm.memory[0x080] = 0x10
-	vm.memory[0x081] = 0x10
+	vm.memory[0x081] = 0xF0
 	//A
 	vm.memory[0x082] = 0xF0
 	vm.memory[0x083] = 0x90
@@ -258,7 +258,7 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 		vm.pc += 2
 
 	case 0x8000:
-		switch vm.opcode & 0x00F {
+		switch vm.opcode & 0x000F {
 		case 0x0000:
 			//8xy0 - LD vm.Vx, vm.Vy
 			//Set vm.Vx = vm.Vy
