@@ -555,7 +555,7 @@ func (vm *VM) loop(display Display, keyboard Keyboard) {
 
 	//main loop
 	for running {
-		time.Sleep(time.Duration(1e6/uint32(vm.clockSpeed)) * time.Microsecond)
+		time.Sleep(time.Duration(1E6/uint32(vm.clockSpeed)) * time.Microsecond)
 		running = vm.parseOpcode(keyboard)
 
 		// Do not run SDL in test
