@@ -11,6 +11,7 @@ Features
 Installation
 
 To install and run the Chip 8 emulator, you will need to have Go installed on your computer.
+you can find instructions on doing this at https://go.dev/dl/
 
 Clone the repository to your local machine:
 ``` bash
