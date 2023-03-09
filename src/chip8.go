@@ -9,11 +9,11 @@ import (
 )
 
 func main() {
-	wrapX := flag.String("wrapX", "on",
+	wrapX := flag.String("wrapX", "off",
 		"Wrap screen horizontally: on, off, error")
-	wrapY := flag.String("wrapY", "on",
+	wrapY := flag.String("wrapY", "off",
 		"Wrap screen vertically: on, off, error")
-	clockSpeed := flag.Int("clock-speed", 1300,
+	clockSpeed := flag.Int("clock-speed", 750,
 		"Approximate cycle speed in Hz (default: 1300)")
 	timerSpeed := flag.Int("timer-speed", 60,
 		"Approximate timer speed in Hz (default: 60)")
@@ -25,7 +25,7 @@ func main() {
 		"Colour for foreground (active pixels) as hexadecimal string (default: 0xFFFFFFFF)")
 	bgColour := flag.String("bg", "0x00000000",
 		"Colour for background (active pixels) as hexadecimal string (default: 0x00000000)")
-	debug := flag.Bool("debug", false, "Produce output for debugging")
+	debug := flag.Bool("debug", true, "Produce output for debugging")
 	iniflags.Parse()
 
 	filename := flag.Arg(0)

@@ -248,7 +248,7 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 	case 0x6000:
 		// 6xkk - LD vm.Vx, byte
 		// Set vm.Vx == kk
-		vm.V[0x0F00&vm.opcode>>8] = uint8(0x00F & vm.opcode)
+		vm.V[0x0F00&vm.opcode>>8] = uint8(0x00FF & vm.opcode)
 		vm.pc += 2
 
 	case 0x7000:
@@ -555,7 +555,7 @@ func (vm *VM) loop(display Display, keyboard Keyboard) {
 
 	//main loop
 	for running {
-		time.Sleep(time.Duration(1E6/uint32(vm.clockSpeed)) * time.Microsecond)
+		time.Sleep(time.Duration(1e6/uint32(vm.clockSpeed)) * time.Microsecond)
 		running = vm.parseOpcode(keyboard)
 
 		// Do not run SDL in test
