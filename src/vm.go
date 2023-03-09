@@ -202,13 +202,11 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 		}
 	case 0x1000:
 		// lnnn - JP addr
-		// Jump to location nnn.
 		vm.pc = 0x0FFF & vm.opcode
 		if vm.pc < 0x200 || vm.pc > 0xFFF {
 			log.Fatal(fmt.Errorf("illegal JMP instructions - PC: %x, opcode: %x", vm.pc, vm.opcode))
 		}
 		// fmt.Printf("JMP to : % x, % x\n", vm.pc, vm.opcode)
-		// endless jumps used as halt
 
 	case 0x2000:
 		// 2nnn - CALL addr
