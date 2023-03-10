@@ -428,6 +428,7 @@ func (vm *VM) parseOpcode(keyboard Keyboard) bool {
 				}
 			}
 		}
+		// I dont think screenwrap was a part of the orgianl chip 8 instruction set
 		// The interpreter reads n bytes from vm.memory, starting at the address stored in vm.I
 		// These bytes are then displayed as sprites on vm.screen at coordinates (vm.Vx, vm.Vy)
 		// Sprites are XORed onto the existing vm.screen
