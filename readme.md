@@ -46,6 +46,7 @@ You can toggle the display of the original Chip 8 screen resolution by pressing 
 Contributing
 
 Contributions are welcome! If you would like to contribute to this project, please open a pull request.
+
 License
 
 This project is licensed under the MIT License.
