@@ -32,6 +32,7 @@ Run the emulator:
 ```go
 ./go-chip-8 [path to Chip 8 program]
 ```
+TODO configure cli tool to load rom
 Usage
 
 The Chip 8 emulator supports the original Chip 8 hexadecimal keyboard for input. The key mapping is as follows:
